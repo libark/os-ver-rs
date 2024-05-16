@@ -1,0 +1,31 @@
+[package]
+name = "os-ver"
+description = "Detect version number of operating system (Windows, macOS, iOS, Linux)"
+homepage = "https://github.com/libark/os-ver-rs"
+repository = "https://github.com/libark/os-ver-rs"
+documentation = "https://docs.rs/os-ver"
+version = "0.1.0"
+authors = ["Zhou Wei <zhouwei@ehom.net>"]
+license = "MIT OR Apache-2.0"
+keywords = ["os", "version"]
+edition = "2021"
+
+[dependencies]
+lazy_static = "1.4.0"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-version = "0.1.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.5"
+objc2-foundation = { version = "0.2.0", features = ["NSProcessInfo", "NSString"] }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+objc2 = "0.5"
+objc2-foundation = { version = "0.2.0", features = ["NSString"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"
+
+[[example]]
+name = "os_version"
