@@ -30,6 +30,8 @@ lazy_static! {
         let version = macos::get_version();
         #[cfg(target_os = "windows")]
         let version = windows::get_version();
+        #[cfg(not(any(target_os = "ios", target_os = "linux", target_os = "macos", target_os = "windows")))]
+        let version = Version::default();
 
         version
     };
