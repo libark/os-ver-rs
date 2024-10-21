@@ -4,11 +4,12 @@ pub mod ios;
 pub mod linux;
 #[cfg(target_os = "macos")]
 pub mod macos;
-#[allow(unused)]
 #[cfg(target_os = "windows")]
 pub mod windows;
 
-use lazy_static::lazy_static;
+use std::sync::OnceLock;
+
+use cfg_if::cfg_if;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Version {
@@ -20,21 +21,24 @@ pub struct Version {
 
 type VersionTuple = (u32, u32, u32, u32);
 
-lazy_static! {
-    pub static ref OS_VERSION: Version = {
-        #[cfg(target_os = "ios")]
-        let version = ios::get_version();
-        #[cfg(target_os = "linux")]
-        let version = linux::get_version();
-        #[cfg(target_os = "macos")]
-        let version = macos::get_version();
-        #[cfg(target_os = "windows")]
-        let version = windows::get_version();
-        #[cfg(not(any(target_os = "ios", target_os = "linux", target_os = "macos", target_os = "windows")))]
-        let version = Version::default();
+static OS_VERSION: OnceLock<Version> = OnceLock::new();
 
-        version
-    };
+pub fn os_version() -> &'static Version {
+    OS_VERSION.get_or_init(|| {
+        cfg_if! {
+            if #[cfg(target_os = "ios")] {
+                ios::get_version()
+            } else if #[cfg(target_os = "linux")] {
+                linux::get_version()
+            } else if #[cfg(target_os = "macos")] {
+                macos::get_version()
+            } else if #[cfg(target_os = "windows")] {
+                windows::get_version()
+            } else {
+                Version::default()
+            }
+        }
+    })
 }
 
 impl Version {
@@ -71,20 +75,20 @@ impl From<VersionTuple> for Version {
 
 #[macro_export]
 macro_rules! if_greater_than {
-    (($major:expr) => $block:block $(else $else_block:block)?) => {
-        if_greater_than!(($major, 0, 0, 0) => $block $(else {$else_block})?)
+    {($major:expr) => $block:block $(else $else_block:block)?} => {
+        if_greater_than!{($major, 0, 0, 0) => $block $(else {$else_block})?}
     };
-    (($major:expr, $minor:expr) => $block:block $(else $else_block:block)?) => {
-        if_greater_than!(($major, $minor, 0, 0) => $block $(else {$else_block})?)
+    {($major:expr, $minor:expr) => $block:block $(else $else_block:block)?} => {
+        if_greater_than!{($major, $minor, 0, 0) => $block $(else {$else_block})?}
     };
-    (($major:expr, $minor:expr, $patch:expr) => $block:block $(else $else_block:block)?) => {
-        if_greater_than!(($major, $minor, $patch, 0) => $block $(else {$else_block})?)
+    {($major:expr, $minor:expr, $patch:expr) => $block:block $(else $else_block:block)?} => {
+        if_greater_than!{($major, $minor, $patch, 0) => $block $(else {$else_block})?}
     };
-    (($major:expr, $minor:expr, $patch:expr, $build:expr) => $block:block $(else $else_block:block)?) => {
-        if_greater_than!(Version { major: $major, minor: $minor, patch: $patch, build: $build } => $block $(else {$else_block})?)
+    {($major:expr, $minor:expr, $patch:expr, $build:expr) => $block:block $(else $else_block:block)?} => {
+        if_greater_than!{os_ver::Version { major: $major, minor: $minor, patch: $patch, build: $build } => $block $(else {$else_block})?}
     };
-    ($version:expr => $block:block $(else $else_block:block)?) => {
-        if *OS_VERSION >= $version {
+    {$version:expr => $block:block $(else $else_block:block)?} => {
+        if os_ver::os_version() >= &$version {
             $block
         } $(else {
             $else_block

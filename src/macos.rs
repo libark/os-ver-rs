@@ -3,6 +3,7 @@ use objc2_foundation::NSProcessInfo;
 
 use crate::Version;
 
+pub const SEQUOIA: Version = Version::new(15, 0, 0, 0);
 pub const SONOMA: Version = Version::new(14, 0, 0, 0);
 pub const VENTURA: Version = Version::new(13, 0, 0, 0);
 pub const MONTEREY: Version = Version::new(12, 0, 0, 0);
@@ -24,7 +25,12 @@ pub(crate) fn get_version() -> Version {
     let process_info = NSProcessInfo::processInfo();
     if NSProcessInfo::class().responds_to(sel!(operatingSystemVersion)) {
         let version = process_info.operatingSystemVersion();
-        Version::new(version.majorVersion as u32, version.minorVersion as u32, version.patchVersion as u32, 0)
+        Version::new(
+            version.majorVersion as u32,
+            version.minorVersion as u32,
+            version.patchVersion as u32,
+            0,
+        )
     } else {
         let ver_str = unsafe { process_info.operatingSystemVersionString() };
         let ver_str = ver_str.to_string();

@@ -16,5 +16,10 @@ pub const WIN11: Version = Version::new(10, 0, 0, 22000);
 
 pub(crate) fn get_version() -> Version {
     let os_version = windows_version::OsVersion::current();
-    Version::new(os_version.major, os_version.minor, os_version.pack, os_version.build)
+    Version::new(
+        os_version.major,
+        os_version.minor,
+        os_version.pack,
+        os_version.build,
+    )
 }
